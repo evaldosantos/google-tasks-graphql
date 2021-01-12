@@ -36,6 +36,19 @@ const typeDefs = `
     links: [TaskMetadata]
   }
 
+  input TaskParameters {
+    completedMax: String
+    completedMin: String
+    dueMax: String
+    dueMin: String
+    maxResults: Int
+    pageToken: String
+    showCompleted: Boolean
+    showDeleted: Boolean
+    showHidden: Boolean
+    updatedMin: String
+  }
+
   type TaskMetadata {
     type: String,
     description: String,
@@ -44,7 +57,7 @@ const typeDefs = `
 
   type Query {
     taskLists(maxResults: Int, pageToken: String): TaskListResponse
-    taskList(taskListId: String): TaskList
+    taskList(taskListId: String, params: TaskParameters): TaskList
     tasks(taskListId: String): [Task]
   }
 `;
@@ -68,7 +81,7 @@ const resolvers = {
         .then((response) => response.json())
         .then((response) => response);
     },
-    taskList: async (_, { taskListId }, context) => {
+    taskList: async (_, { taskListId, params = {} }, context) => {
       const headers = new Headers({
         "Content-Type": "application/json",
         Authorization: context.token,
@@ -78,16 +91,18 @@ const resolvers = {
         headers,
       };
 
-      console.log(
-        `https://tasks.googleapis.com/tasks/v1/users/@me/lists/${taskListId}`
+      const filteredParams = JSON.parse(JSON.stringify(params));
+      const queryParams = new URLSearchParams();
+      Object.entries(filteredParams).forEach(([paramName, paramValue]) =>
+        queryParams.set(paramName, paramValue)
       );
 
       return fetch(
-        `https://tasks.googleapis.com/tasks/v1/users/@me/lists/${taskListId}`,
+        `https://tasks.googleapis.com/tasks/v1/users/@me/lists/${taskListId}?${queryParams.toString()}`,
         options
       ).then((response) => response.json());
     },
-    tasks: async (_, { taskListId }, context) => {
+    tasks: async (_, { taskListId, params = {} }, context) => {
       const headers = new Headers({
         "Content-Type": "application/json",
         Authorization: context.token,
