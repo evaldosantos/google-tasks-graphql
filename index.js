@@ -44,6 +44,7 @@ const typeDefs = `
 
   type Query {
     taskLists(maxResults: Int, pageToken: String): TaskListResponse
+    taskList(taskListId: String): TaskList
     tasks(taskListId: String): [Task]
   }
 `;
@@ -66,6 +67,25 @@ const resolvers = {
       )
         .then((response) => response.json())
         .then((response) => response);
+    },
+    taskList: async (_, { taskListId }, context) => {
+      const headers = new Headers({
+        "Content-Type": "application/json",
+        Authorization: context.token,
+      });
+
+      const options = {
+        headers,
+      };
+
+      console.log(
+        `https://tasks.googleapis.com/tasks/v1/users/@me/lists/${taskListId}`
+      );
+
+      return fetch(
+        `https://tasks.googleapis.com/tasks/v1/users/@me/lists/${taskListId}`,
+        options
+      ).then((response) => response.json());
     },
     tasks: async (_, { taskListId }, context) => {
       const headers = new Headers({
