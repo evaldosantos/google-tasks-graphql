@@ -11,6 +11,13 @@ const typeDefs = `
     selfLink: String
   }
 
+  type TaskListResponse {
+    kind: String,
+    etag: String,
+    nextPageToken: String,
+    items: [TaskList]
+  }
+
   type Task {
     kind: String,
     id: String,
@@ -36,14 +43,14 @@ const typeDefs = `
   }
 
   type Query {
-    taskLists: [TaskList]
+    taskLists(maxResults: Int, pageToken: String): TaskListResponse
     tasks(taskListId: String): [Task]
   }
 `;
 
 const resolvers = {
   Query: {
-    taskLists: async (_, { name }, context) => {
+    taskLists: async (_, { maxResults = 20, pageToken = "" }, context) => {
       const headers = new Headers({
         "Content-Type": "application/json",
         Authorization: context.token,
@@ -54,11 +61,11 @@ const resolvers = {
       };
 
       return fetch(
-        "https://tasks.googleapis.com/tasks/v1/users/@me/lists",
+        `https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=${maxResults}&pageToken=${pageToken}`,
         options
       )
         .then((response) => response.json())
-        .then((response) => response.items);
+        .then((response) => response);
     },
     tasks: async (_, { taskListId }, context) => {
       const headers = new Headers({
@@ -73,9 +80,7 @@ const resolvers = {
       if (!taskListId) {
         throw "taskListId can't be empty";
       }
-      console.log(
-        `https://tasks.googleapis.com/tasks/v1/lists/${taskListId}/tasks`
-      );
+
       return fetch(
         `https://tasks.googleapis.com/tasks/v1/lists/${taskListId}/tasks`,
         options
