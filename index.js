@@ -36,6 +36,13 @@ const typeDefs = `
     links: [TaskMetadata]
   }
 
+  type TaskResponse {
+    kind: String,
+    etag: String,
+    nextPageToken: String,
+    items: [Task]
+  }
+
   input TaskParameters {
     completedMax: String
     completedMin: String
@@ -57,8 +64,9 @@ const typeDefs = `
 
   type Query {
     taskLists(maxResults: Int, pageToken: String): TaskListResponse
-    taskList(taskListId: String, params: TaskParameters): TaskList
-    tasks(taskListId: String): [Task]
+    taskList(taskListId: String!): TaskList
+    tasks(taskListId: String!, params: TaskParameters): TaskResponse
+    task(taskListId: String!, taskId: String!): Task
   }
 `;
 
@@ -81,7 +89,22 @@ const resolvers = {
         .then((response) => response.json())
         .then((response) => response);
     },
-    taskList: async (_, { taskListId, params = {} }, context) => {
+    taskList: async (_, { taskListId }, context) => {
+      const headers = new Headers({
+        "Content-Type": "application/json",
+        Authorization: context.token,
+      });
+
+      const options = {
+        headers,
+      };
+
+      return fetch(
+        `https://tasks.googleapis.com/tasks/v1/users/@me/lists/${taskListId}`,
+        options
+      ).then((response) => response.json());
+    },
+    tasks: async (_, { taskListId, params = {} }, context) => {
       const headers = new Headers({
         "Content-Type": "application/json",
         Authorization: context.token,
@@ -98,11 +121,11 @@ const resolvers = {
       );
 
       return fetch(
-        `https://tasks.googleapis.com/tasks/v1/users/@me/lists/${taskListId}?${queryParams.toString()}`,
+        `https://tasks.googleapis.com/tasks/v1/lists/${taskListId}/tasks?${queryParams.toString()}`,
         options
       ).then((response) => response.json());
     },
-    tasks: async (_, { taskListId, params = {} }, context) => {
+    task: async (_, { taskListId, taskId }, context) => {
       const headers = new Headers({
         "Content-Type": "application/json",
         Authorization: context.token,
@@ -112,16 +135,10 @@ const resolvers = {
         headers,
       };
 
-      if (!taskListId) {
-        throw "taskListId can't be empty";
-      }
-
       return fetch(
-        `https://tasks.googleapis.com/tasks/v1/lists/${taskListId}/tasks`,
+        `https://tasks.googleapis.com/tasks/v1/lists/${taskListId}/tasks/${taskId}`,
         options
-      )
-        .then((response) => response.json())
-        .then((response) => response.items);
+      ).then((response) => response.json());
     },
   },
 };
