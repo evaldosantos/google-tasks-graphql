@@ -2,6 +2,15 @@ import { GraphQLServer } from "graphql-yoga";
 import fetch, { Headers } from "node-fetch";
 
 const typeDefs = `
+  input TaskListInput {
+    kind: String,
+    id: String,
+    etag: String,
+    title: String,
+    updated: String,
+    selfLink: String
+  }
+
   type TaskList {
     kind: String,
     id: String,
@@ -67,6 +76,13 @@ const typeDefs = `
     taskList(taskListId: String!): TaskList
     tasks(taskListId: String!, params: TaskParameters): TaskResponse
     task(taskListId: String!, taskId: String!): Task
+  }
+
+  type Mutation {
+    deleteTaskList(taskListId: String!): String
+    insertTaskList(taskList: TaskListInput): TaskList
+    patchTaskList(taskList: TaskListInput): TaskList
+    updateTaskList(taskList: TaskListInput): TaskList
   }
 `;
 
