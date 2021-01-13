@@ -83,6 +83,12 @@ const typeDefs = `
     insertTaskList(taskList: TaskListInput): TaskList
     patchTaskList(taskList: TaskListInput): TaskList
     updateTaskList(taskList: TaskListInput): TaskList
+    clearTasks(taskListId: String!): String
+    deleteTask(taskListId: String!, taskId: String!): String
+    insertTask(taskListId: String!, task: TaskParameters, parent: String, previous: String): Task
+    moveTask(taskListId: String!, taskId: String!, parent: String, previous: String): Task
+    patchTask(taskListId: String!, taskId: String!, task: TaskParameters): Task
+    updateTask(taskListId: String!, taskId: String!, task: TaskParameters): Task
   }
 `;
 
