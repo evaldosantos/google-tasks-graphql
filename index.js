@@ -163,6 +163,26 @@ const resolvers = {
       ).then((response) => response.json());
     },
   },
+  Mutation: {
+    deleteTaskList: async (_, { taskListId }, context) => {
+      const headers = new Headers({
+        "Content-Type": "application/json",
+        Authorization: context.token,
+      });
+
+      const options = {
+        headers,
+        method: "DELETE",
+      };
+
+      return fetch(
+        `https://www.googleapis.com/tasks/v1/users/@me/lists/${taskListId}`,
+        options
+      )
+        .then(() => "ok")
+        .catch(() => "error");
+    },
+  },
 };
 
 const server = new GraphQLServer({
